@@ -79,6 +79,7 @@
     padding: clamp(16px, 4vw, 48px);
     display: grid;
     grid-template-rows: auto 1fr auto;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .brand {
@@ -96,6 +97,7 @@
   .brand:focus-visible { outline: 2px solid var(--teal); outline-offset: 4px; }
 
   main {
+    min-width: 0;
     align-self: center;
     padding: clamp(40px, 8vh, 96px) 0;
   }
