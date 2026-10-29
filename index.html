@@ -27,6 +27,7 @@
     --hx: 30%;
     --hy: 40%;
     --shift: 20%;
+    --shn: .2;
     color-scheme: light dark;
   }
   @media (prefers-color-scheme: dark) {
@@ -209,10 +210,116 @@
     color: var(--muted);
   }
 
+  /* ---------- easter egg: double-tap the x ---------- */
+
+  .mark {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* once the script splits the word into letters, each letter carries
+     its own slice of the gradient so the word still looks like one piece */
+  .mark.split { background: none; white-space: nowrap; }
+  .ch {
+    display: inline-block;
+    letter-spacing: 0;
+    padding: .1em .03em;
+    margin: -.1em calc(-.035em - .03em) -.1em -.03em;
+    background-image:
+      radial-gradient(circle at var(--hx) var(--hy), var(--spec), rgba(255, 255, 255, 0) 30%),
+      linear-gradient(100deg, var(--cobalt), var(--teal) 28%, var(--violet) 52%, var(--bronze) 74%, var(--cobalt));
+    background-size: var(--W) 100%, calc(var(--W) * 2.6) 100%;
+    background-position: calc(0px - var(--ox)) 0, calc(var(--W) * -1.6 * var(--shn) - var(--ox)) 0;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    transition:
+      translate .9s cubic-bezier(.2, .8, .2, 1),
+      rotate .9s cubic-bezier(.2, .8, .2, 1),
+      opacity .6s ease;
+  }
+  .ch.x {
+    transition:
+      translate 1s cubic-bezier(.65, 0, .25, 1),
+      scale 1s cubic-bezier(.65, 0, .25, 1);
+  }
+  .ch.x.settle {
+    transition:
+      translate 1s cubic-bezier(.65, 0, .25, 1),
+      scale 1s cubic-bezier(.65, 0, .25, 1),
+      rotate .8s cubic-bezier(.3, 0, .2, 1);
+  }
+
+  /* after the intro has played, hand control from the keyframes to transitions */
+  .intro-done .mark,
+  .intro-done .cutter,
+  .intro-done .dim,
+  .intro-done .rule,
+  .intro-done .lede { animation: none; }
+  .intro-done .mark { clip-path: none; }
+  .intro-done .cutter { display: none; }
+  .intro-done .rule { transform: scaleX(1); }
+  .intro-done .dim,
+  .intro-done .lede {
+    opacity: 1;
+    transition: opacity .45s ease, translate .45s ease;
+  }
+
+  /* egg mode */
+  .egg-on { overflow: hidden; overscroll-behavior: none; }
+  .egg-on body {
+    overflow: hidden;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .egg .dim,
+  .egg .lede { opacity: 0; }
+  .egg .lede { translate: 0 12px; }
+  .egg .ch {
+    transition:
+      translate 1.1s cubic-bezier(.55, 0, .8, .3),
+      rotate 1.1s cubic-bezier(.55, 0, .8, .3),
+      opacity .9s ease;
+  }
+  .egg .ch.x {
+    background-size: 100% 100%, 260% 100%;
+    background-position: 0 0, calc(var(--shn) * 100%) 0;
+    transition:
+      translate 1s cubic-bezier(.65, 0, .25, 1) .12s,
+      scale 1s cubic-bezier(.65, 0, .25, 1) .12s;
+  }
+
+  .egg-hint {
+    position: fixed;
+    left: 50%;
+    bottom: calc(clamp(16px, 4vw, 48px) + 40px + env(safe-area-inset-bottom, 0px));
+    width: max-content;
+    max-width: calc(100% - 32px);
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: center;
+    color: var(--muted);
+    opacity: 0;
+    translate: -50% 8px;
+    pointer-events: none;
+    transition: opacity .35s ease, translate .35s ease;
+  }
+  .egg .egg-hint {
+    opacity: 1;
+    translate: -50% 0;
+    transition-delay: 1.1s;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .mark, .dim, .rule, .lede { animation: none; opacity: 1; transform: none; }
     .mark { clip-path: none; }
     .cutter { display: none; }
+    .ch, .egg .ch, .ch.x, .egg .ch.x, .ch.x.settle { transition-duration: .25s; }
   }
 </style>
 </head>
@@ -252,34 +359,243 @@
     <span>© <span id="year">2026</span> adexeel</span>
     <span>adexeel.com</span>
   </footer>
+  <p class="egg-hint" aria-live="polite"></p>
 </div>
 
 <script>
   (function () {
     var root = document.documentElement;
     var mark = document.querySelector('.mark');
+    var main = document.querySelector('main');
+    var block = document.querySelector('.block');
+    var lede = document.querySelector('.lede');
+    var hint = document.querySelector('.egg-hint');
     document.getElementById('year').textContent = new Date().getFullYear();
 
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Split the wordmark into single letters. Screen readers still get one word.
+    var word = mark.textContent.trim();
+    mark.setAttribute('aria-label', word);
+    mark.textContent = '';
+    var letters = [];
+    for (var i = 0; i < word.length; i++) {
+      var s = document.createElement('span');
+      s.className = 'ch';
+      s.setAttribute('aria-hidden', 'true');
+      s.textContent = word[i];
+      mark.appendChild(s);
+      letters.push(s);
+    }
+    mark.classList.add('split');
+    var xIndex = word.indexOf('x');
+    var xEl = letters[xIndex];
+    if (xEl) xEl.classList.add('x');
+
     // Size the wordmark so it always spans the content width, on any screen.
-    var main = document.querySelector('main');
     function fit() {
       mark.style.fontSize = '100px';
       var natural = mark.scrollWidth;
       var size = Math.min(300, 100 * main.clientWidth / natural);
       mark.style.fontSize = Math.max(40, size).toFixed(1) + 'px';
     }
-    fit();
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
-    window.addEventListener('resize', fit);
 
-    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) return;
+    // Tell every letter where it sits inside the word, so the gradient lines up.
+    function layout() {
+      var first = letters[0], last = letters[letters.length - 1];
+      var w = last.offsetLeft + last.offsetWidth - first.offsetLeft;
+      mark.style.setProperty('--W', w + 'px');
+      letters.forEach(function (l) {
+        l.style.setProperty('--ox', (l.offsetLeft - first.offsetLeft) + 'px');
+      });
+    }
 
-    // Light glides across the metal: follows the pointer, drifts on its own otherwise.
+    // Find the visual centre of the x glyph (em, from the top of its box),
+    // so it spins around its middle instead of wobbling.
+    var PAD = 0.1, LH = 0.92;          // must match .ch padding and .mark line-height
+    var originEm = 0.6;
+    function measure() {
+      try {
+        var c = document.createElement('canvas').getContext('2d');
+        c.font = '800 100px Archivo';
+        var m = c.measureText('x');
+        if (m.fontBoundingBoxAscent) {
+          var A = m.fontBoundingBoxAscent / 100, D = m.fontBoundingBoxDescent / 100;
+          var xa = m.actualBoundingBoxAscent / 100, xd = m.actualBoundingBoxDescent / 100;
+          originEm = PAD + (LH - (A + D)) / 2 + A - (xa - xd) / 2;
+        }
+      } catch (e) {}
+    }
+
+    function refresh() {
+      fit();
+      layout();
+      if (egg) placeX();
+    }
+
+    var egg = false;
+    refresh();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { measure(); refresh(); });
+    window.addEventListener('resize', refresh);
+
+    // When the intro has finished, transitions take over from the keyframes.
+    var introReady = false;
+    function introDone() {
+      if (introReady) return;
+      introReady = true;
+      root.classList.add('intro-done');
+    }
+    if (reduce) introDone();
+    else {
+      lede.addEventListener('animationend', introDone);
+      setTimeout(introDone, 8000);
+    }
+
+    // ---------- Easter egg ----------
+    var angle = 0, omega = 0, drag = null, closeTimer = null;
+
+    function placeX() {
+      var fs = parseFloat(getComputedStyle(mark).fontSize);
+      var b = block.getBoundingClientRect();
+      var ox = xEl.offsetWidth / 2, oy = originEm * fs;
+      xEl.style.transformOrigin = ox + 'px ' + oy + 'px';
+      var px = b.left + xEl.offsetLeft + ox;
+      var py = b.top + xEl.offsetTop + oy;
+      var size = Math.min(window.innerWidth * 0.6, window.innerHeight * 0.38);
+      var sc = Math.max(1, Math.min(5, size / xEl.offsetWidth));
+      xEl.style.translate = (window.innerWidth / 2 - px).toFixed(1) + 'px ' + (window.innerHeight / 2 - py).toFixed(1) + 'px';
+      xEl.style.scale = sc.toFixed(3);
+    }
+
+    function open(pointerType) {
+      egg = true;
+      clearTimeout(closeTimer);
+      xEl.classList.remove('settle');
+      hint.textContent = pointerType === 'mouse'
+        ? 'Scroll to spin it. Double-click the x to put it back.'
+        : 'Swipe to spin it. Double-tap the x to put it back.';
+      root.classList.add('egg-on', 'egg');
+
+      var xr = xEl.getBoundingClientRect();
+      var xcx = xr.left + xr.width / 2, xcy = xr.top + xr.height / 2;
+      var reach = Math.hypot(window.innerWidth, window.innerHeight);
+
+      letters.forEach(function (l, i) {
+        if (l === xEl) return;
+        l.style.transitionDelay = (Math.abs(i - xIndex) * 0.05).toFixed(2) + 's';
+        l.style.opacity = '0';
+        if (reduce) return;
+        var r = l.getBoundingClientRect();
+        var dir = Math.atan2(r.top + r.height / 2 - xcy, r.left + r.width / 2 - xcx) + (Math.random() - 0.5) * 1.2;
+        var dist = reach * (0.9 + Math.random() * 0.4);
+        l.style.translate = (Math.cos(dir) * dist).toFixed(0) + 'px ' + (Math.sin(dir) * dist).toFixed(0) + 'px';
+        l.style.rotate = ((Math.random() * 2 - 1) * 540).toFixed(0) + 'deg';
+      });
+
+      placeX();
+    }
+
+    function close() {
+      egg = false;
+      omega = 0;
+      drag = null;
+      root.classList.remove('egg');
+
+      letters.forEach(function (l) {
+        if (l === xEl) return;
+        l.style.transitionDelay = (Math.random() * 0.15).toFixed(2) + 's';
+        l.style.translate = '';
+        l.style.rotate = '';
+        l.style.opacity = '';
+      });
+
+      // Roll the x back to the nearest upright position, then home.
+      xEl.classList.add('settle');
+      xEl.style.rotate = Math.round(angle / 360) * 360 + 'deg';
+      xEl.style.translate = '';
+      xEl.style.scale = '';
+
+      closeTimer = setTimeout(function () {
+        xEl.classList.remove('settle');
+        angle = 0;
+        xEl.style.rotate = '';
+        root.classList.remove('egg-on');
+        letters.forEach(function (l) { l.style.transitionDelay = ''; });
+      }, 1300);
+    }
+
+    function toggle(pointerType) {
+      if (!xEl || !introReady) return;
+      if (egg) close(); else open(pointerType);
+    }
+
+    function onX(x, y) {
+      var r = xEl.getBoundingClientRect(), pad = 10;
+      return x >= r.left - pad && x <= r.right + pad && y >= r.top - pad && y <= r.bottom + pad;
+    }
+
+    // Double-tap / double-click detection that works the same on phones and desktops.
+    var down = null, lastTap = 0, lastX = 0, lastY = 0;
+    window.addEventListener('pointerdown', function (e) {
+      down = { x: e.clientX, y: e.clientY, t: e.timeStamp };
+      if (egg) drag = { x: e.clientX, y: e.clientY, t: e.timeStamp, v: 0 };
+    });
+
+    window.addEventListener('pointermove', function (e) {
+      if (!drag) return;
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      var dt = Math.max(1, e.timeStamp - drag.t);
+      var step = (dx - dy) * 0.6;            // finger right or up = clockwise
+      angle += step;
+      xEl.style.rotate = angle.toFixed(2) + 'deg';
+      drag.v = drag.v * 0.5 + (step / dt * 1000) * 0.5;
+      drag.x = e.clientX; drag.y = e.clientY; drag.t = e.timeStamp;
+    });
+
+    function release(e) {
+      if (drag) {
+        if (e.timeStamp - drag.t > 90) drag.v = 0;   // finger stopped before lifting
+        omega = Math.max(-1800, Math.min(1800, drag.v));
+        drag = null;
+      }
+      if (!down || e.type !== 'pointerup') { down = null; return; }
+      var tap = Math.hypot(e.clientX - down.x, e.clientY - down.y) < 10 &&
+                e.timeStamp - down.t < 350 &&
+                xEl && onX(e.clientX, e.clientY);
+      down = null;
+      if (!tap) { lastTap = 0; return; }
+      if (e.timeStamp - lastTap < 400 && Math.hypot(e.clientX - lastX, e.clientY - lastY) < 40) {
+        lastTap = 0;
+        omega = 0;
+        toggle(e.pointerType);
+      } else {
+        lastTap = e.timeStamp; lastX = e.clientX; lastY = e.clientY;
+      }
+    }
+    window.addEventListener('pointerup', release);
+    window.addEventListener('pointercancel', release);
+
+    // Mouse wheel / trackpad spins it too.
+    window.addEventListener('wheel', function (e) {
+      if (!egg) return;
+      e.preventDefault();
+      var unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? window.innerHeight : 1;
+      omega = Math.max(-1800, Math.min(1800, omega + (e.deltaY + e.deltaX) * unit * 3));
+    }, { passive: false });
+
+    // Keep iOS from scrolling the page while spinning.
+    window.addEventListener('touchmove', function (e) { if (egg) e.preventDefault(); }, { passive: false });
+
+    window.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && egg) close();
+    });
+
+    // ---------- Light on the metal + spin physics ----------
     var tx = 30, ty = 40, cx = 30, cy = 40, auto = true, idleTimer = null, t0 = performance.now();
 
     function aim(e) {
-      var r = mark.getBoundingClientRect();
+      if (reduce) return;
+      var r = (egg ? xEl : mark).getBoundingClientRect();
       tx = ((e.clientX - r.left) / r.width) * 100;
       ty = ((e.clientY - r.top) / r.height) * 100;
       auto = false;
@@ -289,17 +605,35 @@
     window.addEventListener('pointermove', aim, { passive: true });
     window.addEventListener('pointerdown', aim, { passive: true });
 
+    var last = performance.now();
     function loop(now) {
-      if (auto) {
-        var t = (now - t0) / 1000;
-        tx = 50 + 48 * Math.sin(t * 0.32);
-        ty = 45 + 35 * Math.sin(t * 0.47 + 1);
+      var dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+
+      if (!reduce) {
+        if (auto) {
+          var t = (now - t0) / 1000;
+          tx = 50 + 48 * Math.sin(t * 0.32);
+          ty = 45 + 35 * Math.sin(t * 0.47 + 1);
+        }
+        cx += (tx - cx) * 0.07;
+        cy += (ty - cy) * 0.07;
+        var shift = Math.max(0, Math.min(100, cx * 0.9));
+        root.style.setProperty('--hx', cx.toFixed(2) + '%');
+        root.style.setProperty('--hy', cy.toFixed(2) + '%');
+        root.style.setProperty('--shift', shift.toFixed(2) + '%');
+        root.style.setProperty('--shn', (shift / 100).toFixed(4));
       }
-      cx += (tx - cx) * 0.07;
-      cy += (ty - cy) * 0.07;
-      root.style.setProperty('--hx', cx.toFixed(2) + '%');
-      root.style.setProperty('--hy', cy.toFixed(2) + '%');
-      root.style.setProperty('--shift', Math.max(0, Math.min(100, cx * 0.9)).toFixed(2) + '%');
+
+      // Free spin with friction: slows down and stops after a few seconds.
+      if (egg && !drag && omega !== 0) {
+        angle += omega * dt;
+        omega *= Math.pow(0.3, dt);
+        var brake = 40 * dt;
+        omega = Math.abs(omega) <= brake ? 0 : omega - Math.sign(omega) * brake;
+        xEl.style.rotate = angle.toFixed(2) + 'deg';
+      }
+
       requestAnimationFrame(loop);
     }
     requestAnimationFrame(loop);
