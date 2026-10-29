@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>adexeel</title>
+<meta name="description" content="adexeel: a personal site, coming together.">
+<meta name="theme-color" content="#DCDFE2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1A1E23" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%232D3F9E'/%3E%3Cstop offset='.5' stop-color='%230E7F88'/%3E%3Cstop offset='1' stop-color='%237B3FA0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ccircle cx='32' cy='32' r='13' fill='none' stroke='%23fff' stroke-width='6'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --alu: #DCDFE2;
+    --alu-hi: #F1F3F5;
+    --ink: #23282E;
+    --muted: #59616A;
+    --line: #9AA2AA;
+    --cobalt: #2D3F9E;
+    --teal: #0E7F88;
+    --violet: #7B3FA0;
+    --bronze: #A87635;
+    --spec: rgba(255, 255, 255, .75);
+    --grain: rgba(255, 255, 255, .22);
+    --hx: 30%;
+    --hy: 40%;
+    --shift: 20%;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --alu: #1A1E23;
+      --alu-hi: #2A3037;
+      --ink: #E6E9EC;
+      --muted: #9AA3AC;
+      --line: #4F5862;
+      --cobalt: #6378EA;
+      --teal: #2FB6C0;
+      --violet: #B47FE3;
+      --bronze: #DDA960;
+      --spec: rgba(255, 255, 255, .5);
+      --grain: rgba(255, 255, 255, .03);
+    }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body { margin: 0; }
+
+  body {
+    min-height: 100vh;
+    min-height: 100svh;
+    background: radial-gradient(130% 90% at 75% -10%, var(--alu-hi), var(--alu) 60%) fixed, var(--alu);
+    color: var(--ink);
+    font-family: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-stretch: 100%;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* brushed-metal hairlines */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(0deg, var(--grain) 0 1px, transparent 1px 3px);
+    mix-blend-mode: overlay;
+  }
+
+  .page {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100svh;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: clamp(16px, 4vw, 48px);
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: .01em;
+    border-radius: 6px;
+  }
+  .brand svg { width: 22px; height: 22px; display: block; }
+  .brand:focus-visible { outline: 2px solid var(--teal); outline-offset: 4px; }
+
+  main {
+    align-self: center;
+    padding: clamp(40px, 8vh, 96px) 0;
+  }
+
+  .block {
+    position: relative;
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  .mark {
+    margin: 0;
+    font-size: clamp(56px, 16.5vw, 264px);
+    font-weight: 800;
+    font-stretch: 125%;
+    letter-spacing: -.035em;
+    line-height: .92;
+    padding: 0 .04em .06em 0;
+    background-image:
+      radial-gradient(circle at var(--hx) var(--hy), var(--spec), rgba(255, 255, 255, 0) 30%),
+      linear-gradient(100deg, var(--cobalt), var(--teal) 28%, var(--violet) 52%, var(--bronze) 74%, var(--cobalt));
+    background-size: 100% 100%, 260% 100%;
+    background-position: 0 0, var(--shift) 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    clip-path: inset(-10% 100% -10% -2%);
+    animation: mill 1.5s cubic-bezier(.7, 0, .2, 1) .3s forwards;
+  }
+
+  /* the cutter line that "machines" the wordmark in */
+  .cutter {
+    position: absolute;
+    top: -6%;
+    bottom: 18%;
+    left: 0;
+    width: 2px;
+    background: linear-gradient(transparent, var(--teal) 20%, var(--spec) 50%, var(--teal) 80%, transparent);
+    box-shadow: 0 0 14px 2px color-mix(in srgb, var(--teal) 60%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    animation:
+      cut 1.5s cubic-bezier(.7, 0, .2, 1) .3s forwards,
+      fade .4s ease 1.8s forwards;
+  }
+
+  @keyframes mill { to { clip-path: inset(-10% -4% -10% -2%); } }
+  @keyframes cut {
+    0% { left: 0; opacity: 1; }
+    100% { left: 100%; opacity: 1; }
+  }
+  @keyframes fade { to { opacity: 0; } }
+
+  /* technical-drawing dimension line */
+  .dim {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: clamp(14px, 2.2vw, 28px);
+    opacity: 0;
+    animation: show .6s ease 1.7s forwards;
+  }
+  .rule {
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+    position: relative;
+    transform: scaleX(0);
+    animation: grow .7s cubic-bezier(.2, .7, .2, 1) 1.75s forwards;
+  }
+  .rule:first-child { transform-origin: right; }
+  .rule:last-child { transform-origin: left; }
+  .rule::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    width: 1px;
+    height: 13px;
+    background: var(--line);
+  }
+  .rule:first-child::before { left: 0; }
+  .rule:last-child::before { right: 0; }
+  .dim-label {
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: .02em;
+    white-space: nowrap;
+  }
+
+  @keyframes grow { to { transform: scaleX(1); } }
+  @keyframes show { to { opacity: 1; } }
+
+  .lede {
+    margin: clamp(36px, 6vw, 72px) 0 0;
+    max-width: 30ch;
+    font-size: clamp(18px, 2vw, 22px);
+    line-height: 1.5;
+    opacity: 0;
+    animation: show .8s ease 2.1s forwards;
+  }
+  .lede span { display: block; color: var(--muted); }
+
+  footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mark, .dim, .rule, .lede { animation: none; opacity: 1; transform: none; }
+    .mark { clip-path: none; }
+    .cutter { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a class="brand" href="/" aria-label="adexeel home">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <defs>
+          <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="var(--cobalt)"/>
+            <stop offset=".5" stop-color="var(--teal)"/>
+            <stop offset="1" stop-color="var(--violet)"/>
+          </linearGradient>
+        </defs>
+        <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+        <circle cx="32" cy="32" r="13" fill="none" stroke="#fff" stroke-width="6"/>
+      </svg>
+      adexeel
+    </a>
+  </header>
+
+  <main>
+    <div class="block">
+      <h1 class="mark">adexeel</h1>
+      <span class="cutter" aria-hidden="true"></span>
+      <div class="dim" aria-hidden="true">
+        <span class="rule"></span>
+        <span class="dim-label">work in progress</span>
+        <span class="rule"></span>
+      </div>
+    </div>
+    <p class="lede">A personal site, coming together. <span>Check back soon.</span></p>
+  </main>
+
+  <footer>
+    <span>© <span id="year">2026</span> adexeel</span>
+    <span>adexeel.com</span>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var mark = document.querySelector('.mark');
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Size the wordmark so it always spans the content width, on any screen.
+    var main = document.querySelector('main');
+    function fit() {
+      mark.style.fontSize = '100px';
+      var natural = mark.scrollWidth;
+      var size = Math.min(300, 100 * main.clientWidth / natural);
+      mark.style.fontSize = Math.max(40, size).toFixed(1) + 'px';
+    }
+    fit();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+    window.addEventListener('resize', fit);
+
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) return;
+
+    // Light glides across the metal: follows the pointer, drifts on its own otherwise.
+    var tx = 30, ty = 40, cx = 30, cy = 40, auto = true, idleTimer = null, t0 = performance.now();
+
+    function aim(e) {
+      var r = mark.getBoundingClientRect();
+      tx = ((e.clientX - r.left) / r.width) * 100;
+      ty = ((e.clientY - r.top) / r.height) * 100;
+      auto = false;
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(function () { auto = true; t0 = performance.now(); }, e.pointerType === 'touch' ? 1500 : 4000);
+    }
+    window.addEventListener('pointermove', aim, { passive: true });
+    window.addEventListener('pointerdown', aim, { passive: true });
+
+    function loop(now) {
+      if (auto) {
+        var t = (now - t0) / 1000;
+        tx = 50 + 48 * Math.sin(t * 0.32);
+        ty = 45 + 35 * Math.sin(t * 0.47 + 1);
+      }
+      cx += (tx - cx) * 0.07;
+      cy += (ty - cy) * 0.07;
+      root.style.setProperty('--hx', cx.toFixed(2) + '%');
+      root.style.setProperty('--hy', cy.toFixed(2) + '%');
+      root.style.setProperty('--shift', Math.max(0, Math.min(100, cx * 0.9)).toFixed(2) + '%');
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+  })();
+</script>
+</body>
+</html>
